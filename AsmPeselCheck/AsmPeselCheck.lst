@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.37.32825.0	    11/24/23 19:54:21
+Microsoft (R) Macro Assembler Version 14.37.32825.0	    11/24/23 20:40:27
 PeselCheck.asm						     Page 1 - 1
 
 
@@ -90,16 +90,16 @@ PeselCheck.asm						     Page 1 - 1
  0000000F  B9 00000013			mov ecx, 19
  00000014  E8 00000000 E		call readstring ;zapisuje wartosc do eax
  00000019  83 F8 0B			cmp eax, 11
- 0000001C  0F 85 000001B7		jne zladlugosc
+ 0000001C  0F 85 000001C1		jne zladlugosc
 
  00000022  B9 0000000B			mov ecx, 11
  00000027  BE 00000000 R		mov esi, offset pesel
 
  0000002C				et1:
  0000002C  80 3E 30				cmp byte ptr [esi], '0' ; ptr robi konwersje [esi] na byte (wie, ze ma odczytac pojedynczy bajt z adresu)
- 0000002F  0F 8C 000001B0			jl zlyznak
+ 0000002F  0F 8C 000001BA			jl zlyznak
  00000035  80 3E 39				cmp byte ptr [esi], '9'
- 00000038  0F 8F 000001A7			jg zlyznak
+ 00000038  0F 8F 000001B1			jg zlyznak
  0000003E  46					inc esi
  0000003F  E2 EB				loop et1
 						
@@ -111,7 +111,7 @@ PeselCheck.asm						     Page 1 - 1
  00000051				sumaKontrolna:
  00000051  8A 06				mov	al, [esi]
  00000053  3C 00				cmp al, 0
- 00000055  0F 84 00000196			je koniec
+ 00000055  0F 84 000001A0			je koniec
  0000005B  2C 30				sub al, '0'
 
 						; Mno¿enie cyfry pesel przez wagê, wynik w AX
@@ -144,261 +144,268 @@ PeselCheck.asm						     Page 1 - 1
  00000088  66| F7 F3				div bx
 
  0000008B  66| 8B C2				mov ax, dx
- 0000008E  66| BB 000A				mov bx, 10
 
- 00000092  66| 2B D8				sub bx, ax
- 00000095  66| 89 1D				mov kontrolna, bx
+ 0000008E  66| 83 F8 00				cmp ax, 0
+ 00000092  75 04				jne is_not_10
+
+ 00000094  66| B8 000A				mov ax, 10
+
+ 00000098				is_not_10:
+ 00000098  66| BB 000A				mov bx, 10
+
+ 0000009C  66| 2B D8				sub bx, ax
+ 0000009F  66| 89 1D				mov kontrolna, bx
 	   00000028 R
 						
- 0000009C  BE 00000000 R			mov esi, offset pesel
- 000000A1  B9 00000000				mov ecx, 0
- 000000A6  03 0D 00000022 R			add ecx, wagiLength
- 000000AC  83 C1 01				add ecx, 1
+ 000000A6  BE 00000000 R			mov esi, offset pesel
+ 000000AB  B9 00000000				mov ecx, 0
+ 000000B0  03 0D 00000022 R			add ecx, wagiLength
+ 000000B6  83 C1 01				add ecx, 1
 
- 000000AF				znajdzOstatniIndeksPeselu:
- 000000AF  8A 06				mov al, [esi]
- 000000B1  83 F9 01				cmp ecx, 1
- 000000B4  74 03				je sprawdzSume
- 000000B6  46					inc esi
- 000000B7  E2 F6				loop znajdzOstatniIndeksPeselu
+ 000000B9				znajdzOstatniIndeksPeselu:
+ 000000B9  8A 06				mov al, [esi]
+ 000000BB  83 F9 01				cmp ecx, 1
+ 000000BE  74 03				je sprawdzSume
+ 000000C0  46					inc esi
+ 000000C1  E2 F6				loop znajdzOstatniIndeksPeselu
 
- 000000B9				sprawdzSume:
- 000000B9  66| 83 E8 30				sub ax, '0'
- 000000BD  66| 3B 05				cmp ax, kontrolna
+ 000000C3				sprawdzSume:
+ 000000C3  66| 83 E8 30				sub ax, '0'
+ 000000C7  66| 3B 05				cmp ax, kontrolna
 	   00000028 R
- 000000C4  0F 85 00000103			jne zlaSumaKontrolna
+ 000000CE  0F 85 00000103			jne zlaSumaKontrolna
 
- 000000CA				sprawdzRok:
- 000000CA  8D 35 00000000 R			lea esi, pesel
+ 000000D4				sprawdzRok:
+ 000000D4  8D 35 00000000 R			lea esi, pesel
 
 						; Wyodrêbnienie roku
- 000000D0  0F B6 06				movzx eax, byte ptr [esi] ; Pierwsza cyfra roku
- 000000D3  83 E8 30				sub eax, '0'
- 000000D6  6B C0 0A				imul eax, 10
+ 000000DA  0F B6 06				movzx eax, byte ptr [esi] ; Pierwsza cyfra roku
+ 000000DD  83 E8 30				sub eax, '0'
+ 000000E0  6B C0 0A				imul eax, 10
 
- 000000D9  0F B6 5E 01				movzx ebx,byte ptr [esi + 1] ; Druga cyfra roku
- 000000DD  83 EB 30				sub ebx, '0'
- 000000E0  03 C3				add eax, ebx ; Rok
+ 000000E3  0F B6 5E 01				movzx ebx,byte ptr [esi + 1] ; Druga cyfra roku
+ 000000E7  83 EB 30				sub ebx, '0'
+ 000000EA  03 C3				add eax, ebx ; Rok
 						
 						; Sprawdzanie stulecia
- 000000E2  0F B6 4E 02				movzx ecx, byte ptr [esi + 2]
- 000000E6  83 F9 32				cmp ecx, '2'
- 000000E9  72 15				jb not_2000
+ 000000EC  0F B6 4E 02				movzx ecx, byte ptr [esi + 2]
+ 000000F0  83 F9 32				cmp ecx, '2'
+ 000000F3  72 15				jb not_2000
 
- 000000EB  83 F9 33				cmp ecx, '3'
- 000000EE  0F 87 000000CD			ja zlyRok
+ 000000F5  83 F9 33				cmp ecx, '3'
+ 000000F8  0F 87 000000CD			ja zlyRok
 
- 000000F4  05 000007D0				add eax, 2000
- 000000F9  A3 0000002C R			mov rok, eax
- 000000FE  EB 0A				jmp sprawdzMiesiac
+ 000000FE  05 000007D0				add eax, 2000
+ 00000103  A3 0000002C R			mov rok, eax
+ 00000108  EB 0A				jmp sprawdzMiesiac
 						
- 00000100					not_2000:
- 00000100  05 0000076C				 add eax, 1900
- 00000105  A3 0000002C R			 mov rok, eax
+ 0000010A					not_2000:
+ 0000010A  05 0000076C				 add eax, 1900
+ 0000010F  A3 0000002C R			 mov rok, eax
 
- 0000010A				sprawdzMiesiac:
- 0000010A  8D 35 00000002 R			lea esi, pesel + 2
+ 00000114				sprawdzMiesiac:
+ 00000114  8D 35 00000002 R			lea esi, pesel + 2
 
 						; Wyodrêbnienie miesi¹ca
- 00000110  0F B6 06				movzx eax, byte ptr [esi] ; Wczytaj pierwsz¹ cyfrê miesi¹ca
- 00000113  83 E8 30				sub eax, '0'
- 00000116  6B C0 0A				imul eax, 10
+ 0000011A  0F B6 06				movzx eax, byte ptr [esi] ; Wczytaj pierwsz¹ cyfrê miesi¹ca
+ 0000011D  83 E8 30				sub eax, '0'
+ 00000120  6B C0 0A				imul eax, 10
 				    
- 00000119  0F B6 5E 01				movzx ebx, byte ptr [esi + 1] ; Wczytaj drug¹ cyfrê miesi¹ca
- 0000011D  83 EB 30				sub ebx, '0'             
- 00000120  03 C3				add eax, ebx             
+ 00000123  0F B6 5E 01				movzx ebx, byte ptr [esi + 1] ; Wczytaj drug¹ cyfrê miesi¹ca
+ 00000127  83 EB 30				sub ebx, '0'             
+ 0000012A  03 C3				add eax, ebx             
 
- 00000122  A2 0000002B R			mov miesiac, al
+ 0000012C  A2 0000002B R			mov miesiac, al
 
- 00000127  80 3D 0000002B R			cmp miesiac, 33
+ 00000131  80 3D 0000002B R			cmp miesiac, 33
 	   21
- 0000012E  0F 83 00000081			jae zlyMiesiac
+ 00000138  0F 83 00000081			jae zlyMiesiac
 
- 00000134  80 3D 0000002B R			cmp miesiac, 20
+ 0000013E  80 3D 0000002B R			cmp miesiac, 20
 	   14
- 0000013B  77 14				ja month_2000
+ 00000145  77 14				ja month_2000
 
- 0000013D  80 3D 0000002B R			cmp miesiac, 12
+ 00000147  80 3D 0000002B R			cmp miesiac, 12
 	   0C
- 00000144  77 6F				ja zlyMiesiac
+ 0000014E  77 6F				ja zlyMiesiac
 
- 00000146  80 3D 0000002B R			cmp miesiac, 1
+ 00000150  80 3D 0000002B R			cmp miesiac, 1
 	   01
- 0000014D  72 66				jb zlyMiesiac
+ 00000157  72 66				jb zlyMiesiac
 
- 0000014F  EB 15				jmp sprawdzDzien
+ 00000159  EB 15				jmp sprawdzDzien
 
- 00000151					month_2000:
- 00000151  80 3D 0000002B R				cmp miesiac, 21
+ 0000015B					month_2000:
+ 0000015B  80 3D 0000002B R				cmp miesiac, 21
 	   15
- 00000158  72 5B					jb zlyMiesiac
- 0000015A  A0 0000002B R				mov al, miesiac
- 0000015F  2C 14					sub al, 20
- 00000161  A2 0000002B R				mov miesiac, al
+ 00000162  72 5B					jb zlyMiesiac
+ 00000164  A0 0000002B R				mov al, miesiac
+ 00000169  2C 14					sub al, 20
+ 0000016B  A2 0000002B R				mov miesiac, al
 
- 00000166				sprawdzDzien:
- 00000166  8D 35 00000004 R			lea esi, pesel + 4
+ 00000170				sprawdzDzien:
+ 00000170  8D 35 00000004 R			lea esi, pesel + 4
 
- 0000016C  0F B6 06				movzx eax, byte ptr [esi] ; Wczytaj pierwsz¹ cyfrê dnia
- 0000016F  83 E8 30				sub eax, '0'
- 00000172  6B C0 0A				imul eax, 10
+ 00000176  0F B6 06				movzx eax, byte ptr [esi] ; Wczytaj pierwsz¹ cyfrê dnia
+ 00000179  83 E8 30				sub eax, '0'
+ 0000017C  6B C0 0A				imul eax, 10
 				    
- 00000175  0F B6 5E 01				movzx ebx, byte ptr [esi + 1] ; Wczytaj drug¹ cyfrê dnia
- 00000179  83 EB 30				sub ebx, '0'             
- 0000017C  03 C3				add eax, ebx 
+ 0000017F  0F B6 5E 01				movzx ebx, byte ptr [esi + 1] ; Wczytaj drug¹ cyfrê dnia
+ 00000183  83 EB 30				sub ebx, '0'             
+ 00000186  03 C3				add eax, ebx 
 						
- 0000017E  3C 01				cmp al, 1
- 00000180  72 27				jb zlyDzien
+ 00000188  3C 01				cmp al, 1
+ 0000018A  72 27				jb zlyDzien
 
- 00000182  3C 1F				cmp al, 31
- 00000184  77 23				ja zlyDzien
+ 0000018C  3C 1F				cmp al, 31
+ 0000018E  77 23				ja zlyDzien
 
- 00000186  A2 0000002A R			mov dzien, al
+ 00000190  A2 0000002A R			mov dzien, al
 
- 0000018B				sprawdzDzienDoMiesiaca:
- 0000018B  E8 00000068				call SprawdzDzienDokladnie
- 00000190  B8 00000000				mov eax, 0
- 00000195  A0 00000030 R			mov al, dniMiesiaca
- 0000019A  38 05 0000002A R			cmp dzien, al
- 000001A0  77 07				ja zlyDzien
+ 00000195				sprawdzDzienDoMiesiaca:
+ 00000195  E8 00000068				call SprawdzDzienDokladnie
+ 0000019A  B8 00000000				mov eax, 0
+ 0000019F  A0 00000030 R			mov al, dniMiesiaca
+ 000001A4  38 05 0000002A R			cmp dzien, al
+ 000001AA  77 07				ja zlyDzien
 
- 000001A2				wypiszDateUrodzenia:
- 000001A2  E8 000000C5				call WypiszDate	
+ 000001AC				wypiszDateUrodzenia:
+ 000001AC  E8 000000C5				call WypiszDate	
 						
- 000001A7  EB 48			jmp koniec
+ 000001B1  EB 48			jmp koniec
 
- 000001A9				zlyDzien:
- 000001A9  BA 00000096 R			mov edx, offset msgZlyDzien
- 000001AE  E8 00000000 E			call writestring
- 000001B3  EB 3C				jmp koniec
+ 000001B3				zlyDzien:
+ 000001B3  BA 00000096 R			mov edx, offset msgZlyDzien
+ 000001B8  E8 00000000 E			call writestring
+ 000001BD  EB 3C				jmp koniec
 
- 000001B5				zlyMiesiac:
- 000001B5  BA 000000A8 R			mov edx, offset msgZlyMiesiac
- 000001BA  E8 00000000 E			call writestring
- 000001BF  EB 30				jmp koniec
+ 000001BF				zlyMiesiac:
+ 000001BF  BA 000000A8 R			mov edx, offset msgZlyMiesiac
+ 000001C4  E8 00000000 E			call writestring
+ 000001C9  EB 30				jmp koniec
 
- 000001C1				zlyRok:
- 000001C1  BA 000000BC R			mov edx, offset msgZlyRok
- 000001C6  E8 00000000 E			call writestring
- 000001CB  EB 24				jmp koniec
+ 000001CB				zlyRok:
+ 000001CB  BA 000000BC R			mov edx, offset msgZlyRok
+ 000001D0  E8 00000000 E			call writestring
+ 000001D5  EB 24				jmp koniec
 
- 000001CD				zlaSumaKontrolna:
- 000001CD  BA 0000007B R			mov edx, offset msgZlaSumaKontrolna
- 000001D2  E8 00000000 E			call writestring
- 000001D7  EB 18				jmp koniec
+ 000001D7				zlaSumaKontrolna:
+ 000001D7  BA 0000007B R			mov edx, offset msgZlaSumaKontrolna
+ 000001DC  E8 00000000 E			call writestring
+ 000001E1  EB 18				jmp koniec
 
- 000001D9				zladlugosc:
- 000001D9  BA 00000040 R			mov edx, offset msgZlaDlugosc
- 000001DE  E8 00000000 E			call writestring
- 000001E3  EB 0C				jmp koniec
+ 000001E3				zladlugosc:
+ 000001E3  BA 00000040 R			mov edx, offset msgZlaDlugosc
+ 000001E8  E8 00000000 E			call writestring
+ 000001ED  EB 0C				jmp koniec
 
- 000001E5				zlyznak:  
- 000001E5  BA 00000061 R			mov edx, offset msgZlyZnak
- 000001EA  E8 00000000 E			call writestring
- 000001EF  EB 00				jmp koniec
+ 000001EF				zlyznak:  
+ 000001EF  BA 00000061 R			mov edx, offset msgZlyZnak
+ 000001F4  E8 00000000 E			call writestring
+ 000001F9  EB 00				jmp koniec
 						
- 000001F1				koniec:
+ 000001FB				koniec:
 						exit 
- 000001F1  6A 00	   *	    push   +000000000h
- 000001F3  E8 00000000 E   *	    call   ExitProcess
- 000001F8			main endp
+ 000001FB  6A 00	   *	    push   +000000000h
+ 000001FD  E8 00000000 E   *	    call   ExitProcess
+ 00000202			main endp
 
-; Sprawdzanie dokladne dnia
- 000001F8			SprawdzDzienDokladnie PROC
- 000001F8  A0 0000002B R	    mov al, miesiac
- 000001FD  8B 0D 0000002C R	    mov ecx, rok
+				; Sprawdzanie dokladne dnia
+ 00000202			SprawdzDzienDokladnie PROC
+ 00000202  A0 0000002B R	    mov al, miesiac
+ 00000207  8B 0D 0000002C R	    mov ecx, rok
 					
 					; czy miesi¹c to Luty
- 00000203  3C 02		    cmp al, 2
- 00000205  75 44		    jne nie_luty
+ 0000020D  3C 02		    cmp al, 2
+ 0000020F  75 44		    jne nieLuty
 
 					 ; czy rok jest przestêpny
- 00000207  66| 8B C1		    mov ax, cx
- 0000020A  66| BA 0000		    mov dx, 0
- 0000020E  66| BB 0004		    mov bx, 4
- 00000212  66| F7 F3		    div bx
- 00000215  66| 83 FA 00		    cmp dx, 0
- 00000219  75 27		    jne nie_przestepny
+ 00000211  66| 8B C1		    mov ax, cx
+ 00000214  66| BA 0000		    mov dx, 0
+ 00000218  66| BB 0004		    mov bx, 4
+ 0000021C  66| F7 F3		    div bx
+ 0000021F  66| 83 FA 00		    cmp dx, 0
+ 00000223  75 27		    jne niePrzestepny
 
 				    ; Sprawdzanie wyj¹tkow dla lat podzielnych przez 100, które nie s¹ przestêpne, chyba ¿e
 				    ; s¹ równie¿ podzielne przez 400
- 0000021B  66| BA 0000		    mov dx, 0
- 0000021F  66| F7 F1			div cx
- 00000222  66| 83 FA 00			cmp dx, 0
- 00000226  75 11		    jnz przestepny          ; rok nie jest podzielny przez 100
+ 00000225  66| BA 0000		    mov dx, 0
+ 00000229  66| F7 F1			div cx
+ 0000022C  66| 83 FA 00			cmp dx, 0
+ 00000230  75 11		    jnz przestepny          ; rok nie jest podzielny przez 100
 				    
 				    ; Rok podzielny przez 100, czy podzielny przez 400
- 00000228  66| BA 0000		    mov dx, 0
- 0000022C  66| BB 0190		    mov bx, 400
- 00000230  66| F7 F3		    div bx
- 00000233  66| 83 FA 00		    cmp dx, 0
- 00000237  75 09		    jne nie_przestepny      ; Jeœli reszta nie jest 0, rok nie jest przestêpny
+ 00000232  66| BA 0000		    mov dx, 0
+ 00000236  66| BB 0190		    mov bx, 400
+ 0000023A  66| F7 F3		    div bx
+ 0000023D  66| 83 FA 00		    cmp dx, 0
+ 00000241  75 09		    jne niePrzestepny      ; Jeœli reszta nie jest 0, rok nie jest przestêpny
 
- 00000239			przestepny:
- 00000239  C6 05 00000030 R	    mov dniMiesiaca, 29     ; Luty ma 29 dni w roku przestêpnym
+ 00000243			przestepny:
+ 00000243  C6 05 00000030 R	    mov dniMiesiaca, 29     ; Luty ma 29 dni w roku przestêpnym
 	   1D
- 00000240  EB 29		    jmp sprawdzanie_dnia_done
+ 0000024A  EB 29		    jmp sprawdzanieDniaDone
 
- 00000242			nie_przestepny:
- 00000242  C6 05 00000030 R	    mov dniMiesiaca, 28     ; Luty ma 28 dni, jeœli rok nie jest przestêpny
+ 0000024C			niePrzestepny:
+ 0000024C  C6 05 00000030 R	    mov dniMiesiaca, 28     ; Luty ma 28 dni, jeœli rok nie jest przestêpny
 	   1C
- 00000249  EB 20		    jmp sprawdzanie_dnia_done
+ 00000253  EB 20		    jmp sprawdzanieDniaDone
 
- 0000024B			nie_luty:
+ 00000255			nieLuty:
 				    ; SprawdŸ miesi¹ce maj¹ce 30 dni
- 0000024B  3C 04		    cmp al, 4
- 0000024D  74 15		    je trzydziesci_dni
- 0000024F  3C 06		    cmp al, 6
- 00000251  74 11		    je trzydziesci_dni
- 00000253  3C 09		    cmp al, 9
- 00000255  74 0D		    je trzydziesci_dni
- 00000257  3C 0B		    cmp al, 11
- 00000259  74 09		    je trzydziesci_dni
+ 00000255  3C 04		    cmp al, 4
+ 00000257  74 15		    je trzydziesciDni
+ 00000259  3C 06		    cmp al, 6
+ 0000025B  74 11		    je trzydziesciDni
+ 0000025D  3C 09		    cmp al, 9
+ 0000025F  74 0D		    je trzydziesciDni
+ 00000261  3C 0B		    cmp al, 11
+ 00000263  74 09		    je trzydziesciDni
 
 				    ; Reszta ma 31 dni
- 0000025B  C6 05 00000030 R	    mov dniMiesiaca, 31
+ 00000265  C6 05 00000030 R	    mov dniMiesiaca, 31
 	   1F
- 00000262  EB 07		    jmp sprawdzanie_dnia_done
+ 0000026C  EB 07		    jmp sprawdzanieDniaDone
 
- 00000264			trzydziesci_dni:
- 00000264  C6 05 00000030 R	    mov dniMiesiaca, 30
+ 0000026E			trzydziesciDni:
+ 0000026E  C6 05 00000030 R	    mov dniMiesiaca, 30
 	   1E
 
- 0000026B			sprawdzanie_dnia_done:
- 0000026B  C3				ret
+ 00000275			sprawdzanieDniaDone:
+ 00000275  C3				ret
 
- 0000026C			SprawdzDzienDokladnie ENDP
+ 00000276			SprawdzDzienDokladnie ENDP
 
 				; Wypisywanie daty urodzenia
- 0000026C			WypiszDate PROC
- 0000026C  BA 000000CC R		mov edx, offset msgDataUrodzenia
- 00000271  E8 00000000 E		call writestring
+ 00000276			WypiszDate PROC
+ 00000276  BA 000000CC R		mov edx, offset msgDataUrodzenia
+ 0000027B  E8 00000000 E		call writestring
 
- 00000276  A0 0000002A R		mov al, dzien
- 0000027B  E8 00000000 E		call writeint
+ 00000280  A0 0000002A R		mov al, dzien
+ 00000285  E8 00000000 E		call writeint
 
- 00000280  B0 2E			mov al, '.'
- 00000282  E8 00000000 E		call writechar
+ 0000028A  B0 2E			mov al, '.'
+ 0000028C  E8 00000000 E		call writechar
 
- 00000287  A0 0000002B R		mov al, miesiac
- 0000028C  E8 00000000 E		call writeint
+ 00000291  A0 0000002B R		mov al, miesiac
+ 00000296  E8 00000000 E		call writeint
 
- 00000291  B0 2E			mov al, '.'
- 00000293  E8 00000000 E		call writechar
+ 0000029B  B0 2E			mov al, '.'
+ 0000029D  E8 00000000 E		call writechar
 
- 00000298  B8 00000000			mov eax, 0
- 0000029D  A1 0000002C R		mov eax, rok
- 000002A2  E8 00000000 E		call writeint
+ 000002A2  B8 00000000			mov eax, 0
+ 000002A7  A1 0000002C R		mov eax, rok
+ 000002AC  E8 00000000 E		call writeint
 
- 000002A7  C3				ret
+ 000002B1  C3				ret
 
- 000002A8			WypiszDate ENDP
+ 000002B2			WypiszDate ENDP
 
 				end main
 
 
 
-Microsoft (R) Macro Assembler Version 14.37.32825.0	    11/24/23 19:54:21
+Microsoft (R) Macro Assembler Version 14.37.32825.0	    11/24/23 20:40:27
 PeselCheck.asm						     Symbols 2 - 1
 
 
@@ -493,7 +500,7 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 000000FB Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000002A8 Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000002B2 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -575,12 +582,12 @@ SetLocalTime . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 SetTextColor . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ShowFPUStack . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Sleep  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-SprawdzDzienDokladnie  . . . . .	P Near	 000001F8 _TEXT	Length= 00000074 Public STDCALL
-  przestepny . . . . . . . . . .	L Near	 00000239 _TEXT	
-  nie_przestepny . . . . . . . .	L Near	 00000242 _TEXT	
-  nie_luty . . . . . . . . . . .	L Near	 0000024B _TEXT	
-  trzydziesci_dni  . . . . . . .	L Near	 00000264 _TEXT	
-  sprawdzanie_dnia_done  . . . .	L Near	 0000026B _TEXT	
+SprawdzDzienDokladnie  . . . . .	P Near	 00000202 _TEXT	Length= 00000074 Public STDCALL
+  przestepny . . . . . . . . . .	L Near	 00000243 _TEXT	
+  niePrzestepny  . . . . . . . .	L Near	 0000024C _TEXT	
+  nieLuty  . . . . . . . . . . .	L Near	 00000255 _TEXT	
+  trzydziesciDni . . . . . . . .	L Near	 0000026E _TEXT	
+  sprawdzanieDniaDone  . . . . .	L Near	 00000275 _TEXT	
 StrLength  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Str_compare  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Str_copy . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -606,26 +613,27 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-WypiszDate . . . . . . . . . . .	P Near	 0000026C _TEXT	Length= 0000003C Public STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000001F8 Public STDCALL
+WypiszDate . . . . . . . . . . .	P Near	 00000276 _TEXT	Length= 0000003C Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000202 Public STDCALL
   et1  . . . . . . . . . . . . .	L Near	 0000002C _TEXT	
   sumaKontrolna  . . . . . . . .	L Near	 00000051 _TEXT	
-  znajdzOstatniIndeksPeselu  . .	L Near	 000000AF _TEXT	
-  sprawdzSume  . . . . . . . . .	L Near	 000000B9 _TEXT	
-  sprawdzRok . . . . . . . . . .	L Near	 000000CA _TEXT	
-  not_2000 . . . . . . . . . . .	L Near	 00000100 _TEXT	
-  sprawdzMiesiac . . . . . . . .	L Near	 0000010A _TEXT	
-  month_2000 . . . . . . . . . .	L Near	 00000151 _TEXT	
-  sprawdzDzien . . . . . . . . .	L Near	 00000166 _TEXT	
-  sprawdzDzienDoMiesiaca . . . .	L Near	 0000018B _TEXT	
-  wypiszDateUrodzenia  . . . . .	L Near	 000001A2 _TEXT	
-  zlyDzien . . . . . . . . . . .	L Near	 000001A9 _TEXT	
-  zlyMiesiac . . . . . . . . . .	L Near	 000001B5 _TEXT	
-  zlyRok . . . . . . . . . . . .	L Near	 000001C1 _TEXT	
-  zlaSumaKontrolna . . . . . . .	L Near	 000001CD _TEXT	
-  zladlugosc . . . . . . . . . .	L Near	 000001D9 _TEXT	
-  zlyznak  . . . . . . . . . . .	L Near	 000001E5 _TEXT	
-  koniec . . . . . . . . . . . .	L Near	 000001F1 _TEXT	
+  is_not_10  . . . . . . . . . .	L Near	 00000098 _TEXT	
+  znajdzOstatniIndeksPeselu  . .	L Near	 000000B9 _TEXT	
+  sprawdzSume  . . . . . . . . .	L Near	 000000C3 _TEXT	
+  sprawdzRok . . . . . . . . . .	L Near	 000000D4 _TEXT	
+  not_2000 . . . . . . . . . . .	L Near	 0000010A _TEXT	
+  sprawdzMiesiac . . . . . . . .	L Near	 00000114 _TEXT	
+  month_2000 . . . . . . . . . .	L Near	 0000015B _TEXT	
+  sprawdzDzien . . . . . . . . .	L Near	 00000170 _TEXT	
+  sprawdzDzienDoMiesiaca . . . .	L Near	 00000195 _TEXT	
+  wypiszDateUrodzenia  . . . . .	L Near	 000001AC _TEXT	
+  zlyDzien . . . . . . . . . . .	L Near	 000001B3 _TEXT	
+  zlyMiesiac . . . . . . . . . .	L Near	 000001BF _TEXT	
+  zlyRok . . . . . . . . . . . .	L Near	 000001CB _TEXT	
+  zlaSumaKontrolna . . . . . . .	L Near	 000001D7 _TEXT	
+  zladlugosc . . . . . . . . . .	L Near	 000001E3 _TEXT	
+  zlyznak  . . . . . . . . . . .	L Near	 000001EF _TEXT	
+  koniec . . . . . . . . . . . .	L Near	 000001FB _TEXT	
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C

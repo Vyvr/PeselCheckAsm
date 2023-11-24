@@ -88,6 +88,13 @@ main PROC
 		div bx
 
 		mov ax, dx
+
+		cmp ax, 0
+		jne is_not_10
+
+		mov ax, 10
+
+	is_not_10:
 		mov bx, 10
 
 		sub bx, ax
@@ -245,7 +252,7 @@ SprawdzDzienDokladnie PROC
 	
 	; czy miesi¹c to Luty
     cmp al, 2
-    jne nie_luty
+    jne nieLuty
 
 	 ; czy rok jest przestêpny
     mov ax, cx
@@ -253,7 +260,7 @@ SprawdzDzienDokladnie PROC
     mov bx, 4
     div bx
     cmp dx, 0
-    jne nie_przestepny
+    jne niePrzestepny
 
     ; Sprawdzanie wyj¹tkow dla lat podzielnych przez 100, które nie s¹ przestêpne, chyba ¿e
     ; s¹ równie¿ podzielne przez 400
@@ -267,35 +274,35 @@ SprawdzDzienDokladnie PROC
     mov bx, 400
     div bx
     cmp dx, 0
-    jne nie_przestepny      ; Jeœli reszta nie jest 0, rok nie jest przestêpny
+    jne niePrzestepny      ; Jeœli reszta nie jest 0, rok nie jest przestêpny
 
 przestepny:
     mov dniMiesiaca, 29     ; Luty ma 29 dni w roku przestêpnym
-    jmp sprawdzanie_dnia_done
+    jmp sprawdzanieDniaDone
 
-nie_przestepny:
+niePrzestepny:
     mov dniMiesiaca, 28     ; Luty ma 28 dni, jeœli rok nie jest przestêpny
-    jmp sprawdzanie_dnia_done
+    jmp sprawdzanieDniaDone
 
-nie_luty:
+nieLuty:
     ; SprawdŸ miesi¹ce maj¹ce 30 dni
     cmp al, 4
-    je trzydziesci_dni
+    je trzydziesciDni
     cmp al, 6
-    je trzydziesci_dni
+    je trzydziesciDni
     cmp al, 9
-    je trzydziesci_dni
+    je trzydziesciDni
     cmp al, 11
-    je trzydziesci_dni
+    je trzydziesciDni
 
     ; Reszta ma 31 dni
     mov dniMiesiaca, 31
-    jmp sprawdzanie_dnia_done
+    jmp sprawdzanieDniaDone
 
-trzydziesci_dni:
+trzydziesciDni:
     mov dniMiesiaca, 30
 
-sprawdzanie_dnia_done:
+sprawdzanieDniaDone:
 	ret
 
 SprawdzDzienDokladnie ENDP
